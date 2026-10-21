@@ -1,0 +1,33 @@
+function body(){const r=ui.role,t=ui.tab;if(t==='Overview')return ov(r);
+ if(r==='parent'){const s=me(),tc=tch();
+  if(t==='My Child')return `<h1>My Child</h1><div class="card"><p><b>${esc(s.name)}</b><br>ID ${s.id} · Born ${s.dob}<br>Class ${esc(s.cls)} · ${s.sched}<br>Teacher ${esc(tc.name)}</p><p class="mut">View only. Ask the school office to change official records.</p></div>`;
+  if(t==='Grades')return `<h1>Grades</h1>`+D.grades.map(g=>`<div class="card"><h3>${esc(g.title)}</h3><b>${esc(g.score)}</b><p>${esc(g.fb)}</p>${seenB(g)} ${g.seen?'':`<button class="btn sm" data-a="seen" data-k="grades" data-i="${g.id}">Mark as Seen</button>`}</div>`).join('');
+  if(t==='Activities')return `<h1>Activities</h1>`+D.acts.map(a=>`<div class="card"><h3>${esc(a.title)}</h3><p>${esc(a.desc)}<br>Date: ${esc(a.date)}<br>Teacher says: ${esc(a.instr)}</p>${seenB(a)} ${a.seen?'':`<button class="btn sm" data-a="seen" data-k="acts" data-i="${a.id}">Mark as Seen</button>`}</div>`).join('');
+  if(t==='Assignments')return `<h1>Assignments</h1>`+D.assigns.map(a=>`<div class="card"><h3>${esc(a.title)}</h3><p>${esc(a.instr)}<br>Assigned: ${esc(a.date)} · <b>Due: ${esc(a.due)}</b><br>Notes: ${esc(a.notes)}</p>${seenB(a)} ${a.seen?'':`<button class="btn sm" data-a="seen" data-k="assigns" data-i="${a.id}">Mark as Seen</button>`}</div>`).join('');
+  if(t==='Messages')return `<div class="bar" style="align-items:center"><h1 style="margin:0;flex:1">Messages</h1><button class="btn" data-a="contact">Contact Teacher</button></div>${D.msgs.map(thread).join('')||'<div class="card">No messages yet. Use Contact Teacher to ask a question or send an excuse letter.</div>'}`;
+  if(t==='Events')return `<h1>Events</h1>`+D.events.map(e=>`<div class="card"><h3>${esc(e.name)}</h3>${esc(e.when)}<p>${esc(e.desc)}</p></div>`).join('');
+  if(t==='Expenses')return `<h1>Upcoming expenses</h1><div class="card tw"><table><tr><th>Category</th><th>Description</th><th>Amount</th><th>Due</th><th>Status</th></tr>${D.expenses.map(e=>`<tr><td>${esc(e.cat)}</td><td>${esc(e.desc)}</td><td>${esc(e.amt)}</td><td>${esc(e.due||'—')}</td><td><span class="badge">${esc(e.status)}</span></td></tr>`).join('')}</table></div><div class="note">Amounts are examples. The school will announce final amounts.</div>`;
+  if(t==='Account')return `<h1>Account</h1><div class="card"><p><b>${esc(s.guardian)}</b> (Parent / guardian)<br>Contact: ${esc(s.contact)}<br>Linked child: ${esc(s.name)}</p></div><div class="card"><h3>Class schedule</h3>${tc.sched} class · Teacher ${esc(tc.name)} · ${esc(tc.phone)}</div>`}
+ if(r==='teacher'){
+  if(t==='My Students')return `<h1>My Students</h1>${searchBar()}${studentTable(filt(mine()),false)}`;
+  if(t==='Reminders')return coll('reminders','Parent reminders',[['Title',x=>esc(x.title)],['Message',x=>esc(x.msg)],['Posted',x=>esc(x.date)],['Priority',x=>`<span class="badge">${esc(x.prio)}</span>`]]);
+  if(t==='Activities')return coll('acts','Activities',[['Title',x=>esc(x.title)],['Date',x=>esc(x.date)],['Instructions',x=>esc(x.instr)],seenCol]);
+  if(t==='Assignments')return coll('assigns','Assignments',[['Title',x=>esc(x.title)],['Due',x=>esc(x.due)],['Notes',x=>esc(x.notes)],seenCol]);
+  if(t==='Parent Messages'){const ids=mine().map(s=>s.id),ms=D.msgs.filter(m=>ids.includes(m.sid));return `<h1>Parent Messages</h1>${ms.map(m=>thread(m).replace(/<\/div>$/,`<p><button class="btn sm" data-a="reply" data-i="${m.id}">Reply</button></p></div>`)).join('')||'<div class="card">No messages from parents yet.</div>'}`}
+  if(t==='Events')return coll('events','Events',[['Event',x=>esc(x.name)],['When',x=>esc(x.when)],['Details',x=>esc(x.desc)]]);
+  if(t==='Schedule'){const c=tch();return `<h1>Schedule</h1><div class="card"><p>${esc(c.cls)} · ${c.sched} class</p></div><h3>Upcoming events</h3>${D.events.map(e=>`<div class="card">${esc(e.name)} – ${esc(e.when)}</div>`).join('')}`}}
+ if(r==='admin'){
+  if(t==='Students')return `<div class="bar" style="align-items:center"><h1 style="margin:0;flex:1">Students</h1><button class="btn" data-a="add" data-k="students">Add Student</button></div>${searchBar()}${studentTable(filt(D.students),true)}`;
+  if(t==='Teachers')return coll('teachers','Teachers',[['ID',x=>x.id],['Name',x=>esc(x.name)],['Class',x=>esc(x.cls)],['Schedule',x=>x.sched],['Contact',x=>esc(x.phone)+'<br>'+esc(x.email)],['Status',x=>x.active?'Active':'Inactive']]);
+  if(t==='Parent Links')return `<h1>Parent Links</h1><div class="card tw"><table><tr><th>Guardian</th><th>Contact</th><th>Linked student</th></tr>${D.students.map(s=>`<tr><td>${esc(s.guardian)}</td><td>${esc(s.contact)}</td><td>${esc(s.name)} (${s.id})</td></tr>`).join('')}</table></div><p class="mut">Edit a link by editing the student record.</p>`;
+  if(t==='Grades')return coll('grades','Grades',[['Title',x=>esc(x.title)],['Result',x=>esc(x.score)],['Feedback',x=>esc(x.fb)],['Parent status',x=>seenB(x)]]);
+  if(t==='Activities')return coll('acts','Activities',[['Title',x=>esc(x.title)],['Date',x=>esc(x.date)],seenCol]);
+  if(t==='Assignments')return coll('assigns','Assignments',[['Title',x=>esc(x.title)],['Due',x=>esc(x.due)],seenCol]);
+  if(t==='Announcements')return coll('announcements','Announcements',[['Title',x=>esc(x.title)],['Message',x=>esc(x.msg)],['Date',x=>esc(x.date)]]);
+  if(t==='Events')return coll('events','Events',[['Event',x=>esc(x.name)],['When',x=>esc(x.when)]]);
+  if(t==='Expenses')return coll('expenses','Expenses',[['Category',x=>esc(x.cat)],['Description',x=>esc(x.desc)],['Amount',x=>esc(x.amt)],['Status',x=>esc(x.status)]]);
+  if(t==='Website Settings'){const s=D.settings;return `<h1>Website settings</h1><div class="card"><form id="sf">${['address','phone','email','hours'].map(k=>`<label for="s_${k}">${k[0].toUpperCase()+k.slice(1)}</label><input id="s_${k}" name="${k}" value="${esc(s[k])}">`).join('')}<p><button class="btn" type="submit">Save changes</button></p></form></div><div class="card"><h3>Demo tools</h3><button class="btn del" data-a="reset">Reset sample data</button></div>`}}
+ return ''}
+function dash(){return `<div class="dash"><aside class="side" aria-label="Menu">${TABS[ui.role].map(t=>`<button class="${ui.tab===t?'on':''}" data-a="tab" data-t="${t}">${t}</button>`).join('')}<button data-a="logout" style="margin-top:1rem">Log Out</button></aside><div class="dm">${ui.role==='admin'?'':''}<div class="note" style="margin-top:0">Prototype: data is stored only in this browser. There is no real security or sync between devices.</div>${body()}</div></div>`}
+function render(){const p=ui.role&&['dash'].includes(ui.page)?'dash':ui.page;let h=nav();
+ h+=p==='dash'?dash():`<div>${{home,about,services,login}[p]()}</div>`+footer();$('#app').innerHTML=h;scrollTo(0,0)}
